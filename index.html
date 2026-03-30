@@ -7,7 +7,7 @@
     <style>
         :root { --oro: #c5a059; --negro: #121212; --gris: #2a2a2a; --texto: #f0f0f0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--negro); color: var(--texto); margin: 0; display: flex; justify-content: center; padding: 20px; }
-        .card { background: var(--gris); padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); width: 100%; max-width: 500px; border-top: 5px solid var(--oro); }
+        .card { background: var(--gris); padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); width: 100%; max-width: 600px; border-top: 5px solid var(--oro); }
         h1 { color: var(--oro); text-align: center; font-weight: 300; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
         .firma { text-align: center; font-size: 0.85rem; color: #aaa; margin-bottom: 25px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .field { margin-bottom: 18px; }
@@ -15,32 +15,30 @@
         input, select { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .checkbox-group { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; background: #1a1a1a; padding: 14px; border-radius: 8px; border: 1px solid #333; }
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
-        button { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; margin-top: 15px; }
-        .btn-calc { background: var(--oro); color: var(--negro); }
-        .btn-print { background: #444; color: white; margin-top: 10px; display: none; }
-        #resultado { margin-top: 25px; padding: 20px; background: #000; border-radius: 10px; border-left: 6px solid var(--oro); display: none; }
-        .price { font-size: 2.4rem; color: #fff; font-weight: bold; margin-bottom: 8px; }
-        .details { font-size: 0.88rem; color: #ccc; line-height: 1.7; border-top: 1px solid #333; padding-top: 12px; margin-top: 12px; }
+        button { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; margin-top: 15px; background: var(--oro); color: var(--negro); }
+        button:hover { background: #d4b375; }
+        #resultado { margin-top: 25px; display: none; }
+        .price-box { background: #000; padding: 20px; border-radius: 10px; border-left: 6px solid var(--oro); margin-bottom: 20px; }
+        .price { font-size: 2.4rem; color: #fff; font-weight: bold; }
+        .details { font-size: 0.9rem; color: #ccc; line-height: 1.7; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: #1a1a1a; font-size: 0.85rem; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+        th { color: var(--oro); background: #111; }
+        .btn-print { background: #444; color: white; margin-top: 10px; }
         
         @media print {
+            .field, .checkbox-group, button, h1, .firma { display: none; }
             body { background: white; color: black; }
-            .card { box-shadow: none; border: none; width: 100%; max-width: none; background: white; }
-            .field, .checkbox-group, .btn-calc, .btn-print, h1, .firma { display: none; }
-            #resultado { display: block !important; background: white; color: black; border: none; padding: 0; }
-            .price, .details { color: black; }
-            .print-header { display: block !important; border-bottom: 2px solid #c5a059; margin-bottom: 20px; }
+            .card { box-shadow: none; border: none; background: white; width: 100%; max-width: none; }
+            #resultado { display: block !important; }
+            .price-box, table, th, td { color: black; border: 1px solid #000; background: white; }
+            .price { color: black; }
         }
-        .print-header { display: none; color: black; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="print-header">
-        <h1 style="color: #c5a059; text-align: left;">ARQ. DAVID LINDORO</h1>
-        <p>Cotizaciones Residenciales | Puebla, México</p>
-    </div>
-
     <h1>Arq. David Lindoro</h1>
     <div class="firma">Cotizaciones Residenciales</div>
 
@@ -62,13 +60,29 @@
     <div class="checkbox-group"><input type="checkbox" id="castillos" checked><label>Incluir Castillos Intermedios</label></div>
     <div class="checkbox-group"><input type="checkbox" id="tapaHerreria"><label>¿Añadir Tapa de Herrería en Brocal?</label></div>
 
-    <button class="btn-calc" onclick="generarPresupuesto()">Calcular Presupuesto</button>
-    <button id="btnPrint" class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
+    <button onclick="generarPresupuesto()">Calcular Presupuesto e Insumos</button>
+    <button id="btnPrint" class="btn-print" style="display:none;" onclick="window.print()">Imprimir Cotización Completa</button>
 
     <div id="resultado">
-        <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Estimada:</div>
-        <div id="monto" class="price"></div>
+        <div class="price-box">
+            <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Estimada:</div>
+            <div id="monto" class="price"></div>
+        </div>
+
         <div id="detalleTxt" class="details"></div>
+
+        <h3>Explosión de Insumos (Cantidades y Precios)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Unidad</th>
+                    <th>Cant.</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="tablaInsumos"></tbody>
+        </table>
     </div>
 </div>
 
@@ -80,26 +94,20 @@
         var conHerreria = document.getElementById('tapaHerreria').checked;
         var conCastillos = document.getElementById('castillos').checked;
 
-        if (!litros || litros < 10) {
-            alert("Ingrese una capacidad válida.");
-            return;
-        }
+        if (!litros || litros < 10) return;
 
         var lado = Math.pow(litros/1000, 1/3);
-        var areaLosa = (lado * lado) * 1.18;
         var f = litros / 10000;
+        var fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
+        // Costos Estructurales
         var costoM = (material === "Tabique") ? (espesor === "12" ? 3600 : 6250) : (espesor === "12" ? 3950 : 6700);
-        var total = ((litros/1000 * costoM) + (areaLosa * 1720) + (lado * 245) + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 54000) * (f * 0.61);
+        var totalFinal = ((litros/1000 * costoM) + ((lado*lado*1.18) * 1720) + (lado * 245) + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 54000) * (f * 0.61);
 
-        var fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total);
-        document.getElementById('monto').innerText = fmt;
+        document.getElementById('monto').innerText = fmt.format(totalFinal);
         
         var acceso = conHerreria ? "Herrería (Placa/Ángulo)." : "Sin Tapa.";
-        
         document.getElementById('detalleTxt').innerHTML = 
-            "<strong>Capacidad Cotizada:</strong> " + litros.toLocaleString() + " Litros<br>" +
-            "<strong>Dimensiones Sugeridas:</strong> " + lado.toFixed(2) + "m x " + lado.toFixed(2) + "m x 1.60m<br><br>" +
             "<strong>Ficha de Obra - Arq. David Lindoro:</strong><br>" +
             "• Preparación: Excavación mecánica y afine de fondo manual.<br>" +
             "• Estructura: Geometría definida por muros de " + material + " (" + espesor + " cm) y cimbra.<br>" +
@@ -108,6 +116,27 @@
             "• Concreto: f'c=200 kg/cm² hecho en obra.<br>" +
             "• Acceso: " + acceso;
 
+        // Lógica de Insumos (La Explosión que faltaba)
+        var insumos = [
+            { d: "Excavación y Afine", u: "m3", c: 13 * f, p: 350 },
+            { d: material + " (" + espesor + "cm)", u: (material === "Tabique" ? "Mill" : "Pza"), c: (material === "Tabique" ? 1.5 : 450) * f, p: (material === "Tabique" ? 3850 : 18) },
+            { d: "Cemento Gris CPC 30R", u: "Ton", c: 1.2 * f, p: 4050 },
+            { d: "Arena y Grava (Mezcla)", u: "Viaje", c: 0.8 * f, p: 1950 },
+            { d: "Vigueta Ref. 1/2\"", u: "ml", c: 10 * f, p: 185 },
+            { d: "Bovedilla 60cm", u: "Pza", c: 45 * f, p: 18 },
+            { d: "Malla 6x6-6/6", u: "m2", c: 10 * f, p: 98 },
+            { d: "Varilla 3/8\" (Refuerzo)", u: "Pza", c: 4 * f, p: 195 },
+            { d: "Alambrón #2 (Grapas)", u: "Kg", c: 15 * f, p: 32 },
+            { d: "Bomba y Plomería", u: "Lote", c: 1, p: 8500 }
+        ];
+        if(conHerreria) insumos.push({ d: "Tapa Herrería", u: "Pza", c: 1, p: 3600 });
+
+        var tablaHtml = "";
+        insumos.forEach(function(i) {
+            tablaHtml += "<tr><td>" + i.d + "</td><td>" + i.u + "</td><td>" + i.c.toFixed(2) + "</td><td>" + fmt.format(i.c * i.p) + "</td></tr>";
+        });
+
+        document.getElementById('tablaInsumos').innerHTML = tablaHtml;
         document.getElementById('resultado').style.display = 'block';
         document.getElementById('btnPrint').style.display = 'block';
     }
