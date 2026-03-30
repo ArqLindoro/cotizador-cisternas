@@ -36,16 +36,16 @@
     <div class="field">
         <label>Material de Muros</label>
         <select id="tipoMaterial">
-            <option value="tabique">Tabique Rojo Común (Puebla)</option>
-            <option value="block">Block Macizo (12x20x40 cm)</option>
+            <option value="Tabique">Tabique Rojo Común (Puebla)</option>
+            <option value="Block">Block Macizo (12x20x40 cm)</option>
         </select>
     </div>
 
     <div class="field">
         <label>Espesor Estructural</label>
         <select id="espesor">
-            <option value="12">Muro de 12 cm (Soga)</option>
-            <option value="28">Muro de 28 cm (Tesón)</option>
+            <option value="12">12 cm (Soga)</option>
+            <option value="28">28 cm (Tesón)</option>
         </select>
     </div>
 
@@ -70,8 +70,8 @@
 
 <script>
     function generarPresupuesto() {
-        // Captura de datos
-        var litros = parseFloat(document.getElementById('litros').value);
+        var litrosInput = document.getElementById('litros').value;
+        var litros = parseFloat(litrosInput);
         var material = document.getElementById('tipoMaterial').value;
         var espesor = document.getElementById('espesor').value;
         var conHerreria = document.getElementById('tapaHerreria').checked;
@@ -82,17 +82,17 @@
             return;
         }
 
-        // Lógica de cálculo (Escalada a 10,000L de tu lista)
+        // Lógica de costos escalada a tu tabla de materiales
         var lado = Math.pow(litros/1000, 1/3);
         var areaLosa = (lado * lado) * 1.18;
         var factor = litros / 10000;
 
-        var costoMuroBase = (material === "tabique") ? 
+        var costoMuroBase = (material === "Tabique") ? 
             (espesor === "12" ? 3600 : 6250) : 
             (espesor === "12" ? 3950 : 6700);
 
         var subtotalMuros = (litros / 1000) * costoMuroBase;
-        var subtotalLosa = (areaLosa * 1720) + (lado * 245); // Losa + Nervio Temperatura obligatorio
+        var subtotalLosa = (areaLosa * 1720) + (lado * 245); 
         var subtotalCastillos = conCastillos ? 4600 : 0;
         var subtotalAcceso = conHerreria ? 3600 : 0;
         
@@ -100,22 +100,21 @@
         
         var total = (subtotalMuros + subtotalLosa + subtotalCastillos + subtotalAcceso + fijos) * (factor * 0.61);
 
-        // Formato de moneda
         var formato = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total);
 
-        // Mostrar resultados
         document.getElementById('monto').innerText = formato;
         
-        var textoAcceso = conHerreria ? "Tapa de herrería (Placa/Ángulo)." : "Sin Tapa.";
+        // Texto final EXACTO según tu requerimiento
+        var accesoFinal = conHerreria ? "Herrería (Placa/Ángulo)." : "Sin Tapa.";
 
         document.getElementById('detalleTxt').innerHTML = 
             "<strong>Ficha de Obra - Arq. David Lindoro:</strong><br>" +
             "• Preparación: Excavación mecánica y afine de fondo manual.<br>" +
-            "• Estructura: Muros de " + (material === 'tabique' ? 'Tabique' : 'Block') + " (" + espesor + " cm) y cimbra.<br>" +
+            "• Estructura: Geometría definida por muros de " + material + " (" + espesor + " cm) y cimbra.<br>" +
             "• Losa: Vigueta Alma Abierta (1/2\") y Malla 6x6-6/6.<br>" +
             "• Nervio: Transversal obligatorio (2 varillas 3/8\" y grapas #2).<br>" +
             "• Concreto: f'c=200 kg/cm² hecho en obra.<br>" +
-            "• Acceso: " + textoAcceso;
+            "• Acceso: " + accesoFinal;
 
         document.getElementById('resultado').style.display = 'block';
     }
