@@ -56,4 +56,130 @@
             color: var(--negro); 
             border: none; 
             border-radius: 8px; 
-            font-weight: bold;
+            font-weight: bold; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            text-transform: uppercase; 
+            margin-top: 15px; 
+        }
+        button:hover { background: #d4b375; }
+        #resultado { 
+            margin-top: 25px; 
+            padding: 20px; 
+            background: #000; 
+            border-radius: 10px; 
+            border-left: 6px solid var(--oro); 
+            display: none; 
+        }
+        .price { font-size: 2.4rem; color: #fff; font-weight: bold; margin-bottom: 8px; }
+        .details { font-size: 0.88rem; color: #ccc; line-height: 1.7; border-top: 1px solid #333; padding-top: 12px; margin-top: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Arq. David Lindoro</h1>
+    <div class="firma">Ingeniería Hidráulica Residencial</div>
+
+    <div class="field">
+        <label>Capacidad (Litros)</label>
+        <input type="number" id="litros" value="10000">
+    </div>
+
+    <div class="field">
+        <label>Material de Muros</label>
+        <select id="tipoMaterial">
+            <option value="tabique">Tabique Rojo Común (Puebla)</option>
+            <option value="block">Block Macizo (12x20x40 cm)</option>
+        </select>
+    </div>
+
+    <div class="field">
+        <label>Espesor Estructural</label>
+        <select id="espesor">
+            <option value="12">Muro de 12 cm (Soga)</option>
+            <option value="28">Muro de 28 cm (Tesón)</option>
+        </select>
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="castillos" checked>
+        <label>Incluir Castillos Intermedios</label>
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="tapaHerreria">
+        <label>¿Añadir Tapa de Herrería en Brocal?</label>
+    </div>
+
+    <button onclick="generarPresupuesto()">Calcular Presupuesto</button>
+
+    <div id="resultado">
+        <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Estimada:</div>
+        <div id="monto" class="price"></div>
+        <div id="detalleTxt" class="details"></div>
+    </div>
+</div>
+
+<script>
+    function generarPresupuesto() {
+        const litros = parseFloat(document.getElementById('litros').value);
+        const material = document.getElementById('tipoMaterial').value;
+        const espesor = document.getElementById('espesor').value;
+        const conHerreria = document.getElementById('tapaHerreria').checked;
+        const conCastillos = document.getElementById('castillos').checked;
+
+        if (!litros || litros < 1000) {
+            alert("Por favor, ingrese una capacidad válida.");
+            return;
+        }
+
+        // --- LÓGICA TÉCNICA PUEBLA 2026 ---
+        const lado = Math.pow(litros/1000, 1/3);
+        const areaLosa = (lado * lado) * 1.18;
+        
+        // Muros (Tabique 1.5 Millares base para 10k L)
+        const costoMuro = {
+            "tabique": (espesor == "12") ? 3600 : 6250,
+            "block": (espesor == "12") ? 3950 : 6700
+        };
+
+        // Estructura obligatoria: Nervio temperatura 2 varillas 3/8" y grapas #2
+        const costoNervio = lado * 245; 
+        const costoLosaM2 = 1720; // Vigueta, bovedilla, malla 6x6-6/6, concreto fc=200
+
+        // Insumos fijos (Basados en tu lista de materiales y plomería)
+        const materialesFijos = 32500; 
+        const manoObraLogistica = 25500;
+        
+        const costoCastillos = conCastillos ? (4 * 1150) : 0;
+        const costoAcceso = conHerreria ? 3600 : 900;
+
+        // --- RESULTADO FINAL ---
+        const factorEscala = litros / 10000;
+        const subtotalMuros = (litros / 1000) * costoMuro[material];
+        const subtotalLosaTotal = (areaLosa * costoLosaM2) + costoNervio;
+        
+        const total = (subtotalMuros + subtotalLosaTotal + costoCastillos + costoAcceso + materialesFijos + manoObraLogistica) * (factorEscala * 0.61);
+
+        const formato = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+
+        document.getElementById('monto').innerText = formato(total);
+        
+        document.getElementById('detalleTxt').innerHTML = `
+            <strong>Ficha Técnica Arq. David Lindoro:</strong><br>
+            • Losa: Vigueta Alma Abierta (Ref. 1/2") y Bovedilla de 60cm.<br>
+            • Refuerzo Losa: Malla 6x6-6/6 y <strong>Nervio de temperatura obligatorio</strong> (2 varillas 3/8" y grapas #2).<br>
+            • Concreto: f'c=200 kg/cm² hecho en obra.<br>
+            • Muros: ${material == 'tabique' ? 'Tabique Rojo' : 'Block Macizo'} (${espesor} cm).<br>
+            • Acceso: ${conHerreria ? 'Tapa de herrería (Placa/Ángulo)' : 'Tapa de concreto'}.<br>
+            • Estructura: ${conCastillos ? 'Castillos intermedios reforzados incluidos' : 'Sin castillos intermedios'}.
+        `;
+        
+        document.getElementById('resultado').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
