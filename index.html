@@ -1,20 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Cisternas | Arq. David Lindoro</title>
+    <style>
+        :root { --oro: #c5a059; --negro: #121212; --gris: #2a2a2a; --texto: #e0e0e0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--negro); color: var(--texto); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: var(--gris); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 450px; border-top: 4px solid var(--oro); }
+        h1 { color: var(--oro); text-align: center; font-weight: 300; letter-spacing: 1px; margin-bottom: 5px; }
+        .firma { text-align: center; font-size: 0.8rem; color: #888; margin-bottom: 25px; font-style: italic; }
+        .field { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: var(--oro); }
+        input, select { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin: 15px 0; }
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        button { width: 100%; padding: 15px; background: var(--oro); color: var(--negro); border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; margin-top: 10px; }
+        button:hover { background: #b48e45; }
+        #resultado { margin-top: 25px; padding: 20px; background: #1a1a1a; border-radius: 10px; border-left: 5px solid var(--oro); display: none; animation: fadeIn 0.4s; }
+        .price { font-size: 2rem; color: white; font-weight: bold; margin-bottom: 10px; }
+        .details { font-size: 0.85rem; color: #bbb; line-height: 1.5; border-top: 1px solid #333; pt: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Arq. David Lindoro</h1>
+    <div class="firma">Neuroarquitectura & Construcción de Lujo</div>
+
+    <div class="field">
+        <label>Capacidad (Litros)</label>
+        <input type="number" id="litros" placeholder="Ej: 10000" value="10000">
+    </div>
+
+    <div class="field">
+        <label>Material de Muros</label>
+        <select id="material">
+            <option value="ladrillo">Ladrillo Rojo Recocido</option>
+            <option value="block">Block Macizo</option>
+            <option value="concreto">Concreto Armado</option>
+        </select>
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="castillos" checked>
+        <label>Incluir Castillos Intermedios (Refuerzo)</label>
+    </div>
+
+    <button onclick="generarPresupuesto()">Generar Cotización Técnica</button>
+
+    <div id="resultado">
+        <div style="font-size: 0.8rem; color: var(--oro);">Inversión Total Estimada:</div>
+        <div id="monto" class="price"></div>
+        <div id="detalleTxt" class="details"></div>
+    </div>
+
+    <p style="text-align: center; font-size: 0.7rem; color: #555; margin-top: 20px;">Puebla, México | 2026</p>
+</div>
+
+<script>
 function generarPresupuesto() {
     const litros = parseFloat(document.getElementById('litros').value);
     const materialOpcion = document.getElementById('material').value;
     const conCastillos = document.getElementById('castillos').checked;
 
-    if (!litros || litros < 1000) return alert("Ingrese capacidad válida.");
+    if (!litros || litros < 1000) {
+        alert("Por favor ingrese una capacidad válida.");
+        return;
+    }
 
-    // --- PARÁMETROS TÉCNICOS ---
-    const lado = Math.pow(litros/1000, 1/3);
+    // --- PARÁMETROS TÉCNICOS (Puebla 2026) ---
+    const lado = Math.pow(litros/1000, 1/3); 
     const areaLosa = (lado * lado) * 1.2;
-    const mlNervio = lado; // Un nervio central a lo largo del claro
+    const mlNervio = lado; 
 
-    // Costos Unitarios (Puebla 2026)
     const precioMuros = { "ladrillo": 4800, "block": 5500, "concreto": 8500 };
-    const costoLosaM2 = 1250; // Vigueta, bovedilla y malla
-    const costoCastillo = 1050; 
-    const costoNervioML = 210; // 2 varillas 3/8" + grapas alambrón #2
+    const costoLosaM2 = 1250; // Vigueta, bovedilla y malla 6x6-6/6
+    const costoCastillo = 1050; // Mat + MO
+    const costoNervioML = 210; // 2 varillas 3/8" + grapas #2
 
     // --- CÁLCULO ---
     const subtotalMuros = (litros / 1000) * precioMuros[materialOpcion];
@@ -22,25 +86,29 @@ function generarPresupuesto() {
     const subtotalNervio = mlNervio * costoNervioML;
     const subtotalCastillos = conCastillos ? 4 * costoCastillo : 0;
     
-    // Insumos auxiliares (Clavo, madera, alambre, fletes)
+    // Gastos logísticos (Flete de escombro, madera de cimbra, alambre y clavo)
     const gastosFijos = 8500; 
 
     const total = subtotalMuros + subtotalLosa + subtotalNervio + subtotalCastillos + gastosFijos;
     const formato = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
+    // --- MOSTRAR RESULTADOS ---
     document.getElementById('monto').innerText = formato(total);
     
-    // Detalle Técnico para el Arq. David Lindoro
-    document.querySelector('.details').innerHTML = `
-        <strong>Especificaciones de Losa (Tapa):</strong><br>
-        • Sistema: Vigueta de alma abierta y bovedilla.<br>
-        • Refuerzo Transversal: Nervio de temperatura (2 varillas 3/8").<br>
-        • Estribos: Grapas en alambrón del #2.<br>
-        • Capa de Compresión: Malla electrosoldada 6x6-6/6.<br><br>
-        <strong>Desglose de Obra:</strong><br>
+    document.getElementById('detalleTxt').innerHTML = `
+        <strong>Ficha Técnica de Obra:</strong><br>
+        • Losa: Vigueta de alma abierta y bovedilla.<br>
+        • Refuerzo: Nervio de temperatura (2 varillas 3/8") con grapas de alambrón #2.<br>
+        • Capa de compresión: Malla electrosoldada 6x6-6/6.<br>
+        • Estructura: ${conCastillos ? 'Con' : 'Sin'} castillos intermedios reforzados.<br><br>
+        <strong>Análisis de Inversión:</strong><br>
         Materiales y Acero: ${formato(total * 0.58)}<br>
-        Mano de Obra Especializada: ${formato(total * 0.42)}
+        Mano de Obra y Logística: ${formato(total * 0.42)}
     `;
     
     document.getElementById('resultado').style.display = 'block';
 }
+</script>
+
+</body>
+</html>
