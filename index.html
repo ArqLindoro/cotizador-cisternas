@@ -22,15 +22,7 @@
         .details { font-size: 0.9rem; color: #ccc; line-height: 1.7; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; background: #1a1a1a; font-size: 0.85rem; margin-top: 10px; }
         th, td { border: 1px solid #333; padding: 10px; text-align: left; }
-        th { color: var(--oro); background: #111; text-transform: uppercase; font-size: 0.75rem; }
-        
-        @media print {
-            .field, .checkbox-group, button, h1, .firma { display: none; }
-            body { background: white; color: black; }
-            .card { box-shadow: none; border: none; background: white; width: 100%; max-width: none; }
-            #resultado { display: block !important; }
-            .price-box, table, th, td { color: black; border: 1px solid #000; background: white; }
-        }
+        th { color: var(--oro); background: #111; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -65,19 +57,10 @@
             <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Total Estimada:</div>
             <div id="monto" class="price"></div>
         </div>
-
         <div id="detalleTxt" class="details"></div>
-
-        <h3 style="color:var(--oro); font-size:1rem; border-bottom:1px solid #444; padding-bottom:5px;">EXPLOSIÓN DE INSUMOS (PROPORCIONAL)</h3>
+        <h3 style="color:var(--oro); font-size:1rem; border-bottom:1px solid #444; padding-bottom:5px;">EXPLOSIÓN DE INSUMOS (CÁLCULO EXACTO)</h3>
         <table>
-            <thead>
-                <tr>
-                    <th>Insumo</th>
-                    <th>Unidad</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Insumo</th><th>Unidad</th><th>Cantidad</th><th>Subtotal</th></tr></thead>
             <tbody id="tablaInsumos"></tbody>
         </table>
     </div>
@@ -91,13 +74,57 @@
         var conHerreria = document.getElementById('tapaHerreria').checked;
         var conCastillos = document.getElementById('castillos').checked;
 
-        if (!litros || litros < 500) { alert("Capacidad fuera de rango"); return; }
+        if (!litros || litros < 500) return;
 
-        // --- LÓGICA DE ESCALAMIENTO ARQ. LINDORO ---
         var factorEscala = litros / 10000; 
-        var lado = Math.pow(litros/1000, 1/3);
+        var lado = Math.pow(litros/1000, 1/3); // Longitud aproximada del lado
         var fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+        // --- CÁLCULO DE ACERO DE NERVIO (Precisión Arq. Lindoro) ---
+        var metrosLinealesNervio = lado * 2; // Dos piezas que cruzan el lado largo
+        var piezasVarilla = metrosLinealesNervio / 12; // Fracción de varilla de 12m
+        var costoVarillaNervio = piezasVarilla * 195; // Costo basado en la fracción utilizada
 
         // Costos Estructurales
         var costoM = (material === "Tabique") ? (espesor === "12" ? 3600 : 6250) : (espesor === "12" ? 3950 : 6700);
-        var totalFinal = ((litros/1000 * costoM) + ((lado*lado*1.18) * 1720) + (lado * 245) + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 42000)
+        var totalFinal = ((litros/1000 * costoM) + ((lado*lado*1.18) * 1720) + costoVarillaNervio + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 42000) * (factorEscala * 0.61);
+
+        document.getElementById('monto').innerText = fmt.format(totalFinal);
+        
+        var acceso = conHerreria ? "Herrería (Placa/Ángulo)." : "Sin Tapa.";
+        document.getElementById('detalleTxt').innerHTML = 
+            "<strong>Ficha de Obra - Arq. David Lindoro:</strong><br>" +
+            "• Capacidad: " + litros.toLocaleString() + " Litros.<br>" +
+            "• Preparación: Excavación mecánica y afine de fondo manual.<br>" +
+            "• Estructura: Muros de " + material + " (" + espesor + " cm) y cimbra.<br>" +
+            "• Losa: Vigueta Alma Abierta (1/2\") y Malla 6x6-6/6.<br>" +
+            "• Nervio: Transversal obligatorio (2 varillas 3/8\" y grapas #2).<br>" +
+            "• Concreto: f'c=200 kg/cm² hecho en obra.<br>" +
+            "• Acceso: " + acceso;
+
+        var insumos = [
+            { d: "Excavación y Afine Manual", u: "m3", c: 13 * factorEscala, p: 350 },
+            { d: material + " (" + espesor + "cm)", u: (material === "Tabique" ? "Mill" : "Pza"), c: (material === "Tabique" ? 1.5 : 450) * factorEscala, p: (material === "Tabique" ? 3850 : 18) },
+            { d: "Cemento Gris CPC 30R", u: "Ton", c: 1.2 * factorEscala, p: 4050 },
+            { d: "Arena y Grava (Mezcla)", u: "Viaje", c: 0.8 * factorEscala, p: 1950 },
+            { d: "Vigueta Ref. 1/2\"", u: "ml", c: 10 * factorEscala, p: 185 },
+            { d: "Bovedilla 60cm", u: "Pza", c: 45 * factorEscala, p: 18 },
+            { d: "Malla 6x6-6/6", u: "m2", c: 10 * factorEscala, p: 98 },
+            { d: "Varilla 3/8\" (Nervio Transversal)", u: "Pza (12m)", c: piezasVarilla, p: 195 },
+            { d: "Alambrón #2 (Grapas)", u: "Kg", c: 12 * factorEscala, p: 32 }
+        ];
+        
+        if(conHerreria) insumos.push({ d: "Tapa de Herrería", u: "Pza", c: 1, p: 3600 });
+
+        var tablaHtml = "";
+        insumos.forEach(function(i) {
+            tablaHtml += "<tr><td>" + i.d + "</td><td>" + i.u + "</td><td>" + i.c.toFixed(2) + "</td><td>" + fmt.format(i.c * i.p) + "</td></tr>";
+        });
+
+        document.getElementById('tablaInsumos').innerHTML = tablaHtml;
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('btnPrint').style.display = 'block';
+    }
+</script>
+</body>
+</html>
