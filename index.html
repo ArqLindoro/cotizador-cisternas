@@ -24,11 +24,13 @@
         .price { font-size: 2.4rem; color: #fff; font-weight: bold; margin-bottom: 8px; }
         .details { font-size: 0.88rem; color: #ccc; line-height: 1.7; border-top: 1px solid #333; padding-top: 12px; margin-top: 12px; }
         
-        /* Estilos exclusivos para el PDF (ocultos en web) */
-        #tpu-pdf { display: none; color: black; background: white; padding: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
+        /* Estilos PDF */
+        #tpu-pdf { display: none; color: black; background: white; padding: 40px; font-family: Arial, sans-serif; }
+        .pdf-header { border-bottom: 2px solid #c5a059; margin-bottom: 20px; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .pdf-table th { background: #f9f9f9; color: #333; }
+        .dim-box { background: #fdfaf4; border: 1px solid #c5a059; padding: 15px; margin: 15px 0; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -69,7 +71,7 @@
     </div>
 
     <button class="btn-calc" onclick="generarPresupuesto()">Calcular Presupuesto</button>
-    <button id="btnPdf" class="btn-pdf" onclick="descargarPDF()">Descargar Cotización con TPU (PDF)</button>
+    <button id="btnPdf" class="btn-pdf" onclick="descargarPDF()">Descargar Cotización PDF</button>
 
     <div id="resultado">
         <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Estimada:</div>
@@ -79,35 +81,43 @@
 </div>
 
 <div id="tpu-pdf">
-    <h1 style="color: #c5a059; margin: 0;">ARQ. DAVID LINDORO</h1>
-    <p style="border-bottom: 2px solid #c5a059; padding-bottom: 10px;">Cotizaciones Residenciales | Puebla, México</p>
+    <div class="pdf-header">
+        <h1 style="color: #c5a059; margin: 0; font-size: 24px;">ARQ. DAVID LINDORO</h1>
+        <p style="margin: 5px 0; color: #666;">Cotizaciones Residenciales | Alta Ingeniería</p>
+    </div>
     
-    <h3>Resumen de Cotización</h3>
-    <div id="pdf-resumen"></div>
+    <div class="dim-box">
+        <h3 style="margin-top: 0; color: #c5a059;">Especificaciones del Proyecto</h3>
+        <p><strong>Capacidad Cotizada:</strong> <span id="pdf-litros"></span> Litros</p>
+        <p><strong>Dimensiones Sugeridas (Interiores):</strong> <span id="pdf-dims"></span></p>
+        <p style="font-size: 11px; color: #777;">*Dimensiones libres para garantizar el volumen neto solicitado.</p>
+    </div>
+
+    <div id="pdf-cuerpo"></div>
     
-    <h3>Tarjeta de Precios Unitarios (TPU) - Desglose</h3>
-    <table>
+    <h3>Tarjeta de Precios Unitarios (TPU)</h3>
+    <table class="pdf-table">
         <thead>
             <tr>
                 <th>Concepto</th>
                 <th>Unidad</th>
-                <th>Cant.</th>
-                <th>Descripción Técnica</th>
+                <th>Cant. Est.</th>
+                <th>Descripción</th>
             </tr>
         </thead>
         <tbody>
-            <tr><td>Muros</td><td>m2</td><td id="td-m2"></td><td id="td-muro-desc"></td></tr>
-            <tr><td>Losa Tapa</td><td>m2</td><td id="td-losa-m2"></td><td>Vigueta Alma Abierta (1/2") + Bovedilla 60cm + Malla 6x6-6/6</td></tr>
-            <tr><td>Refuerzo</td><td>ml</td><td id="td-nervio"></td><td>Nervio temperatura (2 varillas 3/8") + Grapas Alambrón #2</td></tr>
-            <tr><td>Excavación</td><td>m3</td><td id="td-exc"></td><td>Medios mecánicos + Afine de fondo manual</td></tr>
-            <tr><td>Plomería</td><td>Lote</td><td>1</td><td>Instalación Tuboplus + Bomba periférica/sumergible</td></tr>
+            <tr><td>Muros Perimetrales</td><td>m2</td><td id="p-m2"></td><td id="p-muro"></td></tr>
+            <tr><td>Losa de Tapa</td><td>m2</td><td id="p-losa"></td><td>Vigueta Alma Abierta (1/2") + Bovedilla + Malla 6x6-6/6</td></tr>
+            <tr><td>Acero de Refuerzo</td><td>ml</td><td id="p-nervio"></td><td>Nervio de temperatura (2 varillas 3/8") + Grapas #2</td></tr>
+            <tr><td>Preparación de Sitio</td><td>m3</td><td id="p-exc"></td><td>Excavación mecánica + Afine de fondo manual</td></tr>
+            <tr><td>Equipamiento</td><td>Lote</td><td>1</td><td>Plomería Tuboplus + Bomba e instalación</td></tr>
         </tbody>
     </table>
-    <p style="margin-top: 30px; font-size: 12px; color: #666;">* Precios sujetos a cambios según volatilidad de materiales en la región de Puebla.</p>
+    <p style="font-size: 10px; color: #888; text-align: center; margin-top: 40px;">Puebla, México | 2026</p>
 </div>
 
 <script>
-    let datosUltimoCalculo = {};
+    var datosGlobales = {};
 
     function generarPresupuesto() {
         var litros = parseFloat(document.getElementById('litros').value);
@@ -116,69 +126,9 @@
         var conHerreria = document.getElementById('tapaHerreria').checked;
         var conCastillos = document.getElementById('castillos').checked;
 
-        if (!litros || litros < 1000) { alert("Capacidad inválida"); return; }
+        if (!litros || litros < 1000) return alert("Ingrese capacidad válida");
 
-        var lado = Math.pow(litros/1000, 1/3);
-        var areaLosa = (lado * lado) * 1.18;
-        var factor = litros / 10000;
-
-        var costoMuroBase = (material === "Tabique") ? (espesor === "12" ? 3600 : 6250) : (espesor === "12" ? 3950 : 6700);
-        var subtotalMuros = (litros / 1000) * costoMuroBase;
-        var subtotalLosa = (areaLosa * 1720) + (lado * 245); 
-        var total = (subtotalMuros + subtotalLosa + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 54000) * (factor * 0.61);
-
-        var formato = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total);
-        document.getElementById('monto').innerText = formato;
-        
-        var accesoFinal = conHerreria ? "Herrería (Placa/Ángulo)." : "Sin Tapa.";
-        var fichaHtml = "<strong>Ficha de Obra - Arq. David Lindoro:</strong><br>" +
-            "• Preparación: Excavación mecánica y afine de fondo manual.<br>" +
-            "• Estructura: Geometría definida por muros de " + material + " (" + espesor + " cm) y cimbra.<br>" +
-            "• Losa: Vigueta Alma Abierta (1/2\") y Malla 6x6-6/6.<br>" +
-            "• Nervio: Transversal obligatorio (2 varillas 3/8\" y grapas #2).<br>" +
-            "• Concreto: f'c=200 kg/cm² hecho en obra.<br>" +
-            "• Acceso: " + accesoFinal;
-
-        document.getElementById('detalleTxt').innerHTML = fichaHtml;
-        document.getElementById('resultado').style.display = 'block';
-        document.getElementById('btnPdf').style.display = 'block';
-
-        // Guardar datos para el PDF
-        datosUltimoCalculo = {
-            total: formato,
-            ficha: fichaHtml,
-            m2Muro: (lado * 4 * 1.6).toFixed(2),
-            descMuro: material + " " + espesor + "cm",
-            losaM2: areaLosa.toFixed(2),
-            nervioMl: lado.toFixed(2),
-            excM3: (litros/1000 * 1.3).toFixed(2)
-        };
-    }
-
-    function descargarPDF() {
-        document.getElementById('pdf-resumen').innerHTML = "<p><strong>Inversión Total: " + datosUltimoCalculo.total + "</strong></p>" + datosUltimoCalculo.ficha;
-        document.getElementById('td-m2').innerText = datosUltimoCalculo.m2Muro;
-        document.getElementById('td-muro-desc').innerText = datosUltimoCalculo.descMuro;
-        document.getElementById('td-losa-m2').innerText = datosUltimoCalculo.losaM2;
-        document.getElementById('td-nervio').innerText = datosUltimoCalculo.nervioMl;
-        document.getElementById('td-exc').innerText = datosUltimoCalculo.excM3;
-
-        const elemento = document.getElementById('tpu-pdf');
-        elemento.style.display = 'block';
-        
-        const opciones = {
-            margin: 1,
-            filename: 'Cotizacion_Arq_Lindoro.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opciones).from(elemento).save().then(() => {
-            elemento.style.display = 'none';
-        });
-    }
-</script>
-
-</body>
-</html>
+        // Cálculo de dimensiones propuestas (Cuboide eficiente)
+        var volumenM3 = litros / 1000;
+        var anchoProp = Math.sqrt(volumenM3 / 1.6).toFixed(2); // Basado en 1.60m de profundidad útil
+        var largoProp = anchoProp;
