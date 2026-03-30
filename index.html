@@ -16,15 +16,13 @@
         .checkbox-group { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; background: #1a1a1a; padding: 14px; border-radius: 8px; border: 1px solid #333; }
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
         button { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; margin-top: 15px; background: var(--oro); color: var(--negro); }
-        button:hover { background: #d4b375; }
         #resultado { margin-top: 25px; display: none; }
         .price-box { background: #000; padding: 20px; border-radius: 10px; border-left: 6px solid var(--oro); margin-bottom: 20px; }
         .price { font-size: 2.4rem; color: #fff; font-weight: bold; }
         .details { font-size: 0.9rem; color: #ccc; line-height: 1.7; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: #1a1a1a; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; background: #1a1a1a; font-size: 0.85rem; margin-top: 10px; }
         th, td { border: 1px solid #333; padding: 10px; text-align: left; }
-        th { color: var(--oro); background: #111; }
-        .btn-print { background: #444; color: white; margin-top: 10px; }
+        th { color: var(--oro); background: #111; text-transform: uppercase; font-size: 0.75rem; }
         
         @media print {
             .field, .checkbox-group, button, h1, .firma { display: none; }
@@ -32,7 +30,6 @@
             .card { box-shadow: none; border: none; background: white; width: 100%; max-width: none; }
             #resultado { display: block !important; }
             .price-box, table, th, td { color: black; border: 1px solid #000; background: white; }
-            .price { color: black; }
         }
     </style>
 </head>
@@ -61,23 +58,23 @@
     <div class="checkbox-group"><input type="checkbox" id="tapaHerreria"><label>¿Añadir Tapa de Herrería en Brocal?</label></div>
 
     <button onclick="generarPresupuesto()">Calcular Presupuesto e Insumos</button>
-    <button id="btnPrint" class="btn-print" style="display:none;" onclick="window.print()">Imprimir Cotización Completa</button>
+    <button id="btnPrint" style="display:none; background:#444; color:white; margin-top:10px;" onclick="window.print()">Imprimir Reporte</button>
 
     <div id="resultado">
         <div class="price-box">
-            <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Estimada:</div>
+            <div style="font-size: 0.8rem; color: var(--oro); text-transform: uppercase;">Inversión Total Estimada:</div>
             <div id="monto" class="price"></div>
         </div>
 
         <div id="detalleTxt" class="details"></div>
 
-        <h3>Explosión de Insumos (Cantidades y Precios)</h3>
+        <h3 style="color:var(--oro); font-size:1rem; border-bottom:1px solid #444; padding-bottom:5px;">EXPLOSIÓN DE INSUMOS (PROPORCIONAL)</h3>
         <table>
             <thead>
                 <tr>
                     <th>Insumo</th>
                     <th>Unidad</th>
-                    <th>Cant.</th>
+                    <th>Cantidad</th>
                     <th>Subtotal</th>
                 </tr>
             </thead>
@@ -94,52 +91,13 @@
         var conHerreria = document.getElementById('tapaHerreria').checked;
         var conCastillos = document.getElementById('castillos').checked;
 
-        if (!litros || litros < 10) return;
+        if (!litros || litros < 500) { alert("Capacidad fuera de rango"); return; }
 
+        // --- LÓGICA DE ESCALAMIENTO ARQ. LINDORO ---
+        var factorEscala = litros / 10000; 
         var lado = Math.pow(litros/1000, 1/3);
-        var f = litros / 10000;
         var fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
         // Costos Estructurales
         var costoM = (material === "Tabique") ? (espesor === "12" ? 3600 : 6250) : (espesor === "12" ? 3950 : 6700);
-        var totalFinal = ((litros/1000 * costoM) + ((lado*lado*1.18) * 1720) + (lado * 245) + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 54000) * (f * 0.61);
-
-        document.getElementById('monto').innerText = fmt.format(totalFinal);
-        
-        var acceso = conHerreria ? "Herrería (Placa/Ángulo)." : "Sin Tapa.";
-        document.getElementById('detalleTxt').innerHTML = 
-            "<strong>Ficha de Obra - Arq. David Lindoro:</strong><br>" +
-            "• Preparación: Excavación mecánica y afine de fondo manual.<br>" +
-            "• Estructura: Geometría definida por muros de " + material + " (" + espesor + " cm) y cimbra.<br>" +
-            "• Losa: Vigueta Alma Abierta (1/2\") y Malla 6x6-6/6.<br>" +
-            "• Nervio: Transversal obligatorio (2 varillas 3/8\" y grapas #2).<br>" +
-            "• Concreto: f'c=200 kg/cm² hecho en obra.<br>" +
-            "• Acceso: " + acceso;
-
-        // Lógica de Insumos (La Explosión que faltaba)
-        var insumos = [
-            { d: "Excavación y Afine", u: "m3", c: 13 * f, p: 350 },
-            { d: material + " (" + espesor + "cm)", u: (material === "Tabique" ? "Mill" : "Pza"), c: (material === "Tabique" ? 1.5 : 450) * f, p: (material === "Tabique" ? 3850 : 18) },
-            { d: "Cemento Gris CPC 30R", u: "Ton", c: 1.2 * f, p: 4050 },
-            { d: "Arena y Grava (Mezcla)", u: "Viaje", c: 0.8 * f, p: 1950 },
-            { d: "Vigueta Ref. 1/2\"", u: "ml", c: 10 * f, p: 185 },
-            { d: "Bovedilla 60cm", u: "Pza", c: 45 * f, p: 18 },
-            { d: "Malla 6x6-6/6", u: "m2", c: 10 * f, p: 98 },
-            { d: "Varilla 3/8\" (Refuerzo)", u: "Pza", c: 4 * f, p: 195 },
-            { d: "Alambrón #2 (Grapas)", u: "Kg", c: 15 * f, p: 32 },
-            { d: "Bomba y Plomería", u: "Lote", c: 1, p: 8500 }
-        ];
-        if(conHerreria) insumos.push({ d: "Tapa Herrería", u: "Pza", c: 1, p: 3600 });
-
-        var tablaHtml = "";
-        insumos.forEach(function(i) {
-            tablaHtml += "<tr><td>" + i.d + "</td><td>" + i.u + "</td><td>" + i.c.toFixed(2) + "</td><td>" + fmt.format(i.c * i.p) + "</td></tr>";
-        });
-
-        document.getElementById('tablaInsumos').innerHTML = tablaHtml;
-        document.getElementById('resultado').style.display = 'block';
-        document.getElementById('btnPrint').style.display = 'block';
-    }
-</script>
-</body>
-</html>
+        var totalFinal = ((litros/1000 * costoM) + ((lado*lado*1.18) * 1720) + (lado * 245) + (conCastillos ? 4600 : 0) + (conHerreria ? 3600 : 0) + 42000)
